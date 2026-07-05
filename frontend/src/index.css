@@ -1,0 +1,510 @@
+/* ==============================================================================
+   Design System Variables & Themes
+   ============================================================================== */
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --spacing-unit: 8px;
+  --border-radius: 16px;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  
+  /* Màu trạng thái chung */
+  --color-success: #10B981;
+  --color-success-bg: rgba(16, 185, 129, 0.1);
+  --color-danger: #EF4444;
+  --color-danger-bg: rgba(239, 68, 68, 0.1);
+}
+
+/* 1. Theme Cream (Kem Sữa Ấm Áp, Thân Thiện - Mặc định)
+   Nền màu kem sữa trung bình nhẹ dịu mắt, thẻ màu kem mềm mại */
+.theme-cream {
+  --color-bg-base: #F5EFE4;
+  --color-bg-surface: #FCFAF6;
+  --color-bg-elevated: #EAE3D2;
+  
+  --color-text-primary: #2C3038;
+  --color-text-secondary: #5C6370;
+  --color-text-muted: #9AA0AC;
+  
+  --color-border: #E5DFC9;
+  --color-border-hover: #D0C8B0;
+  
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-bg: rgba(37, 99, 235, 0.08);
+}
+
+/* 2. Theme Dark (Tối Dịu Mắt, Xám-Navy Thư Giãn) */
+.theme-dark {
+  --color-bg-base: #0F172A;
+  --color-bg-surface: #1E293B;
+  --color-bg-elevated: #334155;
+  
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #CBD5E1;
+  --color-text-muted: #64748B;
+  
+  --color-border: #334155;
+  --color-border-hover: #475569;
+  
+  --color-primary: #6366F1;
+  --color-primary-hover: #4F46E5;
+  --color-primary-bg: rgba(99, 102, 241, 0.1);
+}
+
+/* 3. Theme Gray (Xám Cân Bằng, Không Chói) */
+.theme-gray {
+  --color-bg-base: #E2E8F0;
+  --color-bg-surface: #ECF0F3;
+  --color-bg-elevated: #CBD5E1;
+  
+  --color-text-primary: #2D3748;
+  --color-text-secondary: #4A5568;
+  --color-text-muted: #718096;
+  
+  --color-border: #CBD5E1;
+  --color-border-hover: #A0AEC0;
+  
+  --color-primary: #4A5568;
+  --color-primary-hover: #2D3748;
+  --color-primary-bg: rgba(74, 85, 104, 0.08);
+}
+
+/* ==============================================================================
+   Reset & Base Styles
+   ============================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  min-height: 100vh;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==============================================================================
+   Layout & Container
+   ============================================================================== */
+.app-container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(var(--spacing-unit) * 6) calc(var(--spacing-unit) * 3);
+}
+
+/* Header & Giao diện Chào mừng */
+.header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: calc(var(--spacing-unit) * 4);
+}
+
+.welcome-section h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 4px;
+}
+
+.welcome-section p {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+/* Hộp chuyển đổi Theme */
+.theme-picker {
+  display: flex;
+  background: var(--color-bg-surface);
+  padding: 4px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  gap: 2px;
+}
+
+.theme-btn {
+  border: none;
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.theme-btn:hover {
+  color: var(--color-text-secondary);
+}
+
+/* Biến tấu màu icon khi đổi chế độ */
+.theme-cream .theme-btn[aria-label="Giao diện Kem Sữa"] {
+  color: #D97706 !important; /* Màu cam mặt trời ấm áp */
+  background-color: var(--color-bg-elevated);
+}
+
+.theme-dark .theme-btn[aria-label="Giao diện Tối"] {
+  color: #FBBF24 !important; /* Màu vàng trăng sáng */
+  background-color: var(--color-bg-elevated);
+}
+
+.theme-gray .theme-btn[aria-label="Giao diện Xám"] {
+  color: #475569 !important; /* Màu xám mây nhã nhặn */
+  background-color: var(--color-bg-elevated);
+}
+
+/* ==============================================================================
+   Form & Input Controls
+   ============================================================================== */
+.todo-form {
+  display: flex;
+  gap: 12px;
+  margin-bottom: calc(var(--spacing-unit) * 3);
+}
+
+.input-group {
+  position: relative;
+  flex: 1;
+}
+
+.form-input {
+  width: 100%;
+  height: 48px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 0 16px;
+  border-radius: var(--border-radius);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+
+.btn-primary {
+  height: 48px;
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border: none;
+  padding: 0 24px;
+  border-radius: var(--border-radius);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color var(--transition-fast), transform 0.1s;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* ==============================================================================
+   Search & Filter Controls
+   ============================================================================== */
+.control-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: calc(var(--spacing-unit) * 4);
+}
+
+.search-input {
+  height: 44px;
+  border-radius: 12px;
+}
+
+.filter-group {
+  display: flex;
+  background: var(--color-bg-surface);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  gap: 4px;
+}
+
+.filter-btn {
+  flex: 1;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.filter-btn.active {
+  background: var(--color-primary);
+  color: #FFFFFF;
+}
+
+/* ==============================================================================
+   Todo List & Item UI (Consistent Round Cards)
+   ============================================================================== */
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.todo-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  gap: 16px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.todo-card:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+/* Tối giản check/uncheck */
+.todo-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Checkbox hình tròn lớn */
+.custom-checkbox-wrapper {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.custom-checkbox-wrapper input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 28px;
+  width: 28px;
+  background-color: transparent;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.custom-checkbox-wrapper:hover input ~ .checkmark {
+  border-color: var(--color-primary);
+}
+
+.custom-checkbox-wrapper input:checked ~ .checkmark {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.custom-checkbox-wrapper input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.custom-checkbox-wrapper .checkmark:after {
+  left: 9px;
+  top: 5px;
+  width: 7px;
+  height: 13px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Nội dung text */
+.todo-title-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.todo-title {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition-fast);
+}
+
+.todo-title.completed {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* Trạng thái Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  margin-top: 4px;
+}
+
+.badge-success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-pending {
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+/* Chỉnh sửa trực tiếp trên dòng */
+.edit-input-field {
+  width: 100%;
+  height: 36px;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-primary);
+  color: var(--color-text-primary);
+  padding: 0 8px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.edit-input-field:focus {
+  outline: none;
+}
+
+/* Nút hành động phải */
+.todo-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  border: none;
+  background: transparent;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+}
+
+.action-btn-edit {
+  color: var(--color-text-secondary);
+}
+
+.action-btn-edit:hover {
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+.action-btn-delete {
+  color: var(--color-text-secondary);
+}
+
+.action-btn-delete:hover {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.action-btn-save {
+  color: var(--color-success);
+}
+
+.action-btn-save:hover {
+  background-color: var(--color-success-bg);
+}
+
+.action-btn-cancel {
+  color: var(--color-text-muted);
+}
+
+.action-btn-cancel:hover {
+  background-color: var(--color-bg-elevated);
+}
+
+/* Giao diện trống rỗng */
+.empty-state {
+  text-align: center;
+  padding: calc(var(--spacing-unit) * 8) 0;
+  color: var(--color-text-muted);
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+/* ==============================================================================
+   Responsive & Adaptive
+   ============================================================================== */
+@media (max-width: 576px) {
+  .app-container {
+    padding: calc(var(--spacing-unit) * 3) calc(var(--spacing-unit) * 2);
+  }
+  
+  .header-wrapper {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .theme-picker {
+    align-self: flex-end;
+  }
+  
+  .todo-form {
+    flex-direction: column;
+  }
+  
+  .btn-primary {
+    justify-content: center;
+    width: 100%;
+  }
+}
