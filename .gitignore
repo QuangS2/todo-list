@@ -1,0 +1,30 @@
+# ==============================================================================
+# Gitignore cho mã nguồn sản phẩm (Product Repository)
+# ==============================================================================
+
+# Build & Dependency folders
+node_modules/
+dist/
+build/
+.cache/
+.eslintcache
+.vitest/
+
+# Environment configurations containing secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS/IDE metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.log
