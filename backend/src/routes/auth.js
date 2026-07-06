@@ -5,6 +5,8 @@ import db from '../db.js';
 
 const router = express.Router();
 
+const isProduction = process.env.NODE_ENV === 'production' || !!process.env.FRONTEND_URL;
+
 const generateAccessToken = (user) => {
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name },
@@ -60,8 +62,8 @@ router.post('/register', async (req, res) => {
     // Thiết lập cookie an toàn chứa Refresh Token chống XSS và CSRF
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
     });
 
@@ -110,8 +112,8 @@ router.post('/login', async (req, res) => {
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
@@ -178,8 +180,8 @@ router.post('/logout', async (req, res) => {
     // Xóa cookie ở phía client
     res.clearCookie('refresh_token', {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production'
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax'
     });
     return res.json({ message: 'Đăng xuất thành công.' });
   }
