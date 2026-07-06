@@ -26,14 +26,14 @@ describe('Kiểm thử API Xác thực & Cấp phát JWT (/api/auth)', () => {
 
   describe('POST /api/auth/register - Đăng ký người dùng', () => {
     it('Đăng ký thành công tài khoản hợp lệ', async () => {
-      // 1. Giả lập email chưa tồn tại
+      // Giả lập email chưa tồn tại
       db.query.mockResolvedValueOnce({ rowCount: 0 });
-      // 2. Giả lập INSERT user thành công
+      // Giả lập INSERT user thành công
       db.query.mockResolvedValueOnce({
         rowCount: 1,
         rows: [{ id: 10, email: 'new@example.com', name: 'Thành viên mới' }]
       });
-      // 3. Giả lập INSERT refresh token thành công
+      // Giả lập INSERT refresh token thành công
       db.query.mockResolvedValueOnce({ rowCount: 1 });
 
       const res = await request(app)
@@ -69,12 +69,12 @@ describe('Kiểm thử API Xác thực & Cấp phát JWT (/api/auth)', () => {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(plainPassword, salt);
 
-      // 1. Giả lập tìm thấy người dùng
+      // Giả lập tìm thấy người dùng
       db.query.mockResolvedValueOnce({
         rowCount: 1,
         rows: [{ id: 5, email: 'login@example.com', password_hash: hash, name: 'Người dùng Đăng nhập' }]
       });
-      // 2. Giả lập lưu Refresh Token thành công
+      // Giả lập lưu Refresh Token thành công
       db.query.mockResolvedValueOnce({ rowCount: 1 });
 
       const res = await request(app)

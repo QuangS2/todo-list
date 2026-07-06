@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
-// 1. Mock API Client Layer trước khi import App
+// Mock API Client Layer trước khi import App
 vi.mock('../services/api', () => {
   let mockAccessToken = 'mock-access-token';
   return {
@@ -40,6 +40,7 @@ vi.mock('../services/api', () => {
       }),
       deleteTodo: vi.fn().mockResolvedValue({ message: 'Xóa thành công' })
     },
+    API_BASE_URL: '',
     getAccessToken: () => mockAccessToken,
     setAccessToken: (t) => { mockAccessToken = t; },
     setOnTokenRefreshed: vi.fn(),
@@ -53,7 +54,7 @@ vi.mock('../services/api', () => {
   };
 });
 
-// 2. Mock global.fetch để phục vụ Silent Refresh ngầm trong useEffect của AuthContext
+// Mock global.fetch để phục vụ Silent Refresh ngầm trong useEffect của AuthContext
 global.fetch = vi.fn().mockImplementation((url) => {
   if (url && url.includes('/api/auth/refresh')) {
     return Promise.resolve({
@@ -79,11 +80,11 @@ const localStorageMock = (() => {
 })();
 Object.defineProperty(global, 'localStorage', { value: localStorageMock, writable: true });
 
-describe('Kiểm thử Giao diện & Tính năng Todo List (Mốc 1 sau khi đăng nhập)', () => {
+describe('Kiểm thử Giao diện & Tính năng Todo List', () => {
   beforeEach(() => {
     document.body.className = '';
     localStorage.clear();
-    // Giả lập trạng thái đã đăng nhập trước cho các test case CRUD của Mốc 1
+    // Giả lập trạng thái đã đăng nhập trước
     localStorage.setItem('todo_user', JSON.stringify({ id: 1, email: 'user@example.com', name: 'Lê Anh Quang' }));
     vi.clearAllMocks();
   });
@@ -203,7 +204,7 @@ describe('Kiểm thử Giao diện & Tính năng Todo List (Mốc 1 sau khi đă
   });
 });
 
-describe('Kiểm thử Luồng Đăng nhập, Đăng ký & Đăng xuất (Mốc 2)', () => {
+describe('Kiểm thử Luồng Đăng nhập, Đăng ký & Đăng xuất', () => {
   beforeEach(() => {
     document.body.className = '';
     localStorage.clear();

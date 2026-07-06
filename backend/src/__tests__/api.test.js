@@ -80,11 +80,11 @@ describe('Kiểm thử API CRUD Todos được bảo vệ (/api/todos)', () => {
   });
 
   it('PUT /api/todos/:id - Cập nhật trạng thái và tiêu đề todo (Chính chủ)', async () => {
-    // 1. Giả lập kiểm tra quyền sở hữu: trả về có quyền (rowCount = 1)
+    // Giả lập kiểm tra quyền sở hữu: trả về có quyền (rowCount = 1)
     db.query.mockResolvedValueOnce({ rowCount: 1, rows: [{ id: 1 }] });
-    // 2. Giả lập lấy thông tin hiện tại
+    // Giả lập lấy thông tin hiện tại
     db.query.mockResolvedValueOnce({ rowCount: 1, rows: [{ title: 'Viết test', completed: false }] });
-    // 3. Giả lập UPDATE thành công
+    // Giả lập UPDATE thành công
     db.query.mockResolvedValueOnce({
       rowCount: 1,
       rows: [{ id: 1, title: 'Đã hoàn tất viết test', completed: true }]
@@ -114,9 +114,9 @@ describe('Kiểm thử API CRUD Todos được bảo vệ (/api/todos)', () => {
   });
 
   it('DELETE /api/todos/:id - Xóa một todo hiện có (Chính chủ)', async () => {
-    // 1. Giả lập kiểm tra quyền sở hữu: trả về có quyền (rowCount = 1)
+    // Giả lập kiểm tra quyền sở hữu: trả về có quyền (rowCount = 1)
     db.query.mockResolvedValueOnce({ rowCount: 1, rows: [{ id: 2 }] });
-    // 2. Giả lập DELETE thành công
+    // Giả lập DELETE thành công
     db.query.mockResolvedValueOnce({ rowCount: 1 });
 
     const res = await request(app)
