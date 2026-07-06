@@ -6,13 +6,21 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const poolConfig = {
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_DATABASE || 'todolist',
-  password: process.env.DB_PASSWORD || 'postgres',
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-};
+const poolConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      // Bắt buộc cấu hình SSL cho các Cloud DB như Neon/Supabase để bảo mật đường truyền
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    }
+  : {
+      user: process.env.DB_USER || 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      database: process.env.DB_DATABASE || 'todolist',
+      password: process.env.DB_PASSWORD || 'postgres',
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+    };
 
 const pool = new Pool(poolConfig);
 
