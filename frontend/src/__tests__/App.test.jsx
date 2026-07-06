@@ -1,6 +1,69 @@
 import React from 'react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
+// 1. Mock API Client Layer trước khi import App
+vi.mock('../services/api', () => {
+  let mockAccessToken = 'mock-access-token';
+  return {
+    default: {
+      getAccessToken: () => mockAccessToken,
+      setAccessToken: (t) => { mockAccessToken = t; },
+      setOnTokenRefreshed: vi.fn(),
+      login: vi.fn().mockImplementation((email, password) => {
+        if (email === 'user@example.com' && password === 'password123') {
+          return Promise.resolve({
+            accessToken: 'mock-access-token-xyz',
+            user: { id: 1, email, name: 'Lê Anh Quang' }
+          });
+        }
+        return Promise.reject(new Error('Email hoặc mật khẩu không chính xác.'));
+      }),
+      register: vi.fn().mockImplementation((email, password, name) => {
+        if (email === 'user@example.com') {
+          return Promise.reject(new Error('Email này đã được sử dụng để đăng ký tài khoản.'));
+        }
+        return Promise.resolve({
+          accessToken: 'mock-access-token-xyz',
+          user: { id: 10, email, name }
+        });
+      }),
+      logout: vi.fn().mockResolvedValue(),
+      getTodos: vi.fn().mockResolvedValue([
+        { id: 1, title: 'Viết unit test cho các màn hình frontend', completed: false }
+      ]),
+      createTodo: vi.fn().mockImplementation((title) => {
+        return Promise.resolve({ id: Date.now(), title, completed: false });
+      }),
+      updateTodo: vi.fn().mockImplementation((id, title, completed) => {
+        return Promise.resolve({ id, title, completed });
+      }),
+      deleteTodo: vi.fn().mockResolvedValue({ message: 'Xóa thành công' })
+    },
+    getAccessToken: () => mockAccessToken,
+    setAccessToken: (t) => { mockAccessToken = t; },
+    setOnTokenRefreshed: vi.fn(),
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    getTodos: vi.fn(),
+    createTodo: vi.fn(),
+    updateTodo: vi.fn(),
+    deleteTodo: vi.fn()
+  };
+});
+
+// 2. Mock global.fetch để phục vụ Silent Refresh ngầm trong useEffect của AuthContext
+global.fetch = vi.fn().mockImplementation((url) => {
+  if (url === '/api/auth/refresh') {
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ accessToken: 'mock-access-token-xyz' })
+    });
+  }
+  return Promise.resolve({ ok: false });
+});
+
 import App from '../App';
 
 // Mock localStorage theo đúng quy chuẩn dự án
@@ -21,16 +84,25 @@ describe('Kiểm thử Giao diện & Tính năng Todo List (Mốc 1 sau khi đă
     localStorage.clear();
     // Giả lập trạng thái đã đăng nhập trước cho các test case CRUD của Mốc 1
     localStorage.setItem('todo_user', JSON.stringify({ id: 1, email: 'user@example.com', name: 'Lê Anh Quang' }));
+    vi.clearAllMocks();
   });
 
-  it('Hiển thị tiêu đề chào mừng chứa tên user và số lượng công việc', () => {
+  it('Hiển thị tiêu đề chào mừng chứa tên user và số lượng công việc', async () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: /Chào buổi sáng, Lê Anh Quang!/i })).toBeInTheDocument();
-    expect(screen.getByText(/Hôm nay bạn có 1 công việc cần hoàn thành/i)).toBeInTheDocument();
+    
+    // Chờ màn hình TodoDashboard hiển thị và kết thúc loading của API
+    const heading = await screen.findByRole('heading', { name: /Chào buổi sáng, Lê Anh Quang!/i });
+    expect(heading).toBeInTheDocument();
+    
+    // Đợi số lượng công việc được cập nhật sau khi gọi API getTodos xong
+    const pendingText = await screen.findByText(/Hôm nay bạn có 1 công việc cần hoàn thành/i);
+    expect(pendingText).toBeInTheDocument();
   });
 
-  it('Cho phép chuyển đổi linh hoạt giữa 3 tông màu giao diện (Cream, Dark, Gray)', () => {
+  it('Cho phép chuyển đổi linh hoạt giữa 3 tông màu giao diện (Cream, Dark, Gray)', async () => {
     render(<App />);
+    await screen.findByRole('heading', { name: /Chào buổi sáng, Lê Anh Quang!/i });
+
     const creamBtn = screen.getByLabelText('Giao diện Kem Sữa');
     const darkBtn = screen.getByLabelText('Giao diện Tối');
     const grayBtn = screen.getByLabelText('Giao diện Xám');
@@ -51,30 +123,43 @@ describe('Kiểm thử Giao diện & Tính năng Todo List (Mốc 1 sau khi đă
     expect(localStorage.getItem('todo-theme')).toBe('cream');
   });
 
-  it('Cho phép thêm công việc mới vào danh sách', () => {
+  it('Cho phép thêm công việc mới vào danh sách', async () => {
     render(<App />);
+    await screen.findByRole('heading', { name: /Chào buổi sáng, Lê Anh Quang!/i });
+
     const input = screen.getByPlaceholderText(/Nhập việc bạn muốn làm hôm nay.../i);
     const addButton = screen.getByRole('button', { name: /Thêm việc/i });
 
     fireEvent.change(input, { target: { value: 'Chạy bộ 30 phút buổi chiều' } });
     fireEvent.click(addButton);
 
-    expect(screen.getByText('Chạy bộ 30 phút buổi chiều')).toBeInTheDocument();
+    // Chờ todo mới hiển thị trên giao diện
+    const newTodoItem = await screen.findByText('Chạy bộ 30 phút buổi chiều');
+    expect(newTodoItem).toBeInTheDocument();
   });
 
-  it('Cho phép người dùng đánh dấu check để hoàn thành công việc', () => {
+  it('Cho phép người dùng đánh dấu check để hoàn thành công việc', async () => {
     render(<App />);
-    const checkbox = screen.getByRole('checkbox', { name: /Đánh dấu Viết unit test cho các màn hình frontend/i });
+    await screen.findByRole('heading', { name: /Chào buổi sáng, Lê Anh Quang!/i });
+
+    const checkbox = await screen.findByRole('checkbox', { name: /Đánh dấu Viết unit test cho các màn hình frontend/i });
 
     expect(checkbox).not.toBeChecked();
     fireEvent.click(checkbox);
-    expect(checkbox).toBeChecked();
-    expect(screen.getByText(/Tuyệt vời! Bạn đã hoàn thành tất cả công việc hôm nay./i)).toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(checkbox).toBeChecked();
+    });
+    
+    const completeText = await screen.findByText(/Tuyệt vời! Bạn đã hoàn thành tất cả công việc hôm nay./i);
+    expect(completeText).toBeInTheDocument();
   });
 
-  it('Cho phép chỉnh sửa tiêu đề công việc trực tiếp trên dòng (inline edit)', () => {
+  it('Cho phép chỉnh sửa tiêu đề công việc trực tiếp trên dòng (inline edit)', async () => {
     render(<App />);
-    const editBtn = screen.getByRole('button', { name: /Chỉnh sửa Viết unit test cho các màn hình frontend/i });
+    await screen.findByRole('heading', { name: /Chào buổi sáng, Lê Anh Quang!/i });
+
+    const editBtn = await screen.findByRole('button', { name: /Chỉnh sửa Viết unit test cho các màn hình frontend/i });
     
     // Nhấp vào nút sửa để bật input
     fireEvent.click(editBtn);
@@ -85,19 +170,30 @@ describe('Kiểm thử Giao diện & Tính năng Todo List (Mốc 1 sau khi đă
     // Bấm Enter để lưu
     fireEvent.keyDown(editInput, { key: 'Enter', code: 'Enter' });
 
-    expect(screen.getByText('Viết unit test màn hình đăng nhập')).toBeInTheDocument();
+    const updatedItem = await screen.findByText('Viết unit test màn hình đăng nhập');
+    expect(updatedItem).toBeInTheDocument();
     expect(screen.queryByText('Viết unit test cho các màn hình frontend')).not.toBeInTheDocument();
   });
 
-  it('Cho phép xóa một công việc khỏi danh sách', () => {
+  it('Cho phép xóa một công việc khỏi danh sách', async () => {
     render(<App />);
-    const deleteBtn = screen.getByRole('button', { name: /Xóa Viết unit test cho các màn hình frontend/i });
+    await screen.findByRole('heading', { name: /Chào buổi sáng, Lê Anh Quang!/i });
+
+    const deleteBtn = await screen.findByRole('button', { name: /Xóa Viết unit test cho các màn hình frontend/i });
     fireEvent.click(deleteBtn);
-    expect(screen.queryByText('Viết unit test cho các màn hình frontend')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByText('Viết unit test cho các màn hình frontend')).not.toBeInTheDocument();
+    });
   });
 
-  it('Lọc và tìm kiếm công việc theo từ khóa', () => {
+  it('Lọc và tìm kiếm công việc theo từ khóa', async () => {
     render(<App />);
+    await screen.findByRole('heading', { name: /Chào buổi sáng, Lê Anh Quang!/i });
+    
+    // Đợi item hiển thị trước
+    await screen.findByText('Viết unit test cho các màn hình frontend');
+
     const searchInput = screen.getByPlaceholderText(/Tìm kiếm công việc.../i);
     fireEvent.change(searchInput, { target: { value: 'frontend' } });
 
@@ -110,6 +206,7 @@ describe('Kiểm thử Luồng Đăng nhập, Đăng ký & Đăng xuất (Mốc 
   beforeEach(() => {
     document.body.className = '';
     localStorage.clear();
+    vi.clearAllMocks();
   });
 
   it('Yêu cầu đăng nhập khi chưa có phiên làm việc', () => {
@@ -190,7 +287,7 @@ describe('Kiểm thử Luồng Đăng nhập, Đăng ký & Đăng xuất (Mốc 
     localStorage.setItem('todo_user', JSON.stringify({ id: 1, email: 'user@example.com', name: 'Lê Anh Quang' }));
     render(<App />);
 
-    const logoutBtn = screen.getByRole('button', { name: /Đăng xuất/i });
+    const logoutBtn = await screen.findByRole('button', { name: /Đăng xuất/i });
     fireEvent.click(logoutBtn);
 
     // Quay lại màn hình đăng nhập

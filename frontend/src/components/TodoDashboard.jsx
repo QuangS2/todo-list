@@ -1,15 +1,27 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export const TodoDashboard = ({ theme, setTheme }) => {
   const { user, logout } = useAuth();
 
-  // Local state for Todos
-  const [todos, setTodos] = useState([
-    { id: 1, title: 'Đọc tài liệu hướng dẫn và quy chuẩn dự án', completed: true },
-    { id: 2, title: 'Thiết kế giao diện tối giản, dịu mắt', completed: true },
-    { id: 3, title: 'Viết unit test cho các màn hình frontend', completed: false }
-  ]);
+  // Khởi tạo danh sách công việc rỗng
+  const [todos, setTodos] = useState([]);
+  const [error, setError] = useState('');
+
+  // Tải danh sách công việc thật từ Backend
+  useEffect(() => {
+    const fetchUserTodos = async () => {
+      try {
+        const data = await api.getTodos();
+        setTodos(data);
+      } catch (err) {
+        setError('Không thể kết nối đến máy chủ để tải danh sách công việc.');
+        console.error('Lỗi lấy danh sách:', err.message);
+      }
+    };
+    fetchUserTodos();
+  }, []);
 
   // Input states
   const [newTitle, setNewTitle] = useState('');
@@ -20,31 +32,44 @@ export const TodoDashboard = ({ theme, setTheme }) => {
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState('');
 
-  // Handlers for Todos (Immutable state updates to prevent mutation bugs)
-  const handleAddTodo = (e) => {
+  // Handlers thực tế đấu nối API
+  const handleAddTodo = async (e) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
+    setError('');
 
-    const newTodo = {
-      id: Date.now(),
-      title: newTitle.trim(),
-      completed: false
-    };
-
-    setTodos(prev => [...prev, newTodo]);
-    setNewTitle('');
+    try {
+      const created = await api.createTodo(newTitle.trim());
+      setTodos((prev) => [...prev, created]);
+      setNewTitle('');
+    } catch (err) {
+      setError(err.message || 'Lỗi khi thêm công việc mới.');
+    }
   };
 
-  const handleToggleTodo = (id) => {
-    setTodos(prev =>
-      prev.map(todo =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
+  const handleToggleTodo = async (id) => {
+    setError('');
+    const todoToToggle = todos.find((t) => t.id === id);
+    if (!todoToToggle) return;
+
+    try {
+      const updated = await api.updateTodo(id, todoToToggle.title, !todoToToggle.completed);
+      setTodos((prev) =>
+        prev.map((todo) => (todo.id === id ? updated : todo))
+      );
+    } catch (err) {
+      setError(err.message || 'Lỗi khi thay đổi trạng thái công việc.');
+    }
   };
 
-  const handleDeleteTodo = (id) => {
-    setTodos(prev => prev.filter(todo => todo.id !== id));
+  const handleDeleteTodo = async (id) => {
+    setError('');
+    try {
+      await api.deleteTodo(id);
+      setTodos((prev) => prev.filter((todo) => todo.id !== id));
+    } catch (err) {
+      setError(err.message || 'Lỗi khi xóa công việc.');
+    }
   };
 
   const startEdit = (todo) => {
@@ -52,15 +77,22 @@ export const TodoDashboard = ({ theme, setTheme }) => {
     setEditingText(todo.title);
   };
 
-  const saveEdit = (id) => {
+  const saveEdit = async (id) => {
     if (!editingText.trim()) return;
-    setTodos(prev =>
-      prev.map(todo =>
-        todo.id === id ? { ...todo, title: editingText.trim() } : todo
-      )
-    );
-    setEditingId(null);
-    setEditingText('');
+    setError('');
+    const todoToEdit = todos.find((t) => t.id === id);
+    if (!todoToEdit) return;
+
+    try {
+      const updated = await api.updateTodo(id, editingText.trim(), todoToEdit.completed);
+      setTodos((prev) =>
+        prev.map((todo) => (todo.id === id ? updated : todo))
+      );
+      setEditingId(null);
+      setEditingText('');
+    } catch (err) {
+      setError(err.message || 'Lỗi khi cập nhật nội dung.');
+    }
   };
 
   const cancelEdit = () => {
@@ -68,9 +100,9 @@ export const TodoDashboard = ({ theme, setTheme }) => {
     setEditingText('');
   };
 
-  // Memoized filter and search
+  // Lọc và Tìm kiếm cục bộ phục vụ hiệu năng UI tối ưu
   const filteredTodos = useMemo(() => {
-    return todos.filter(todo => {
+    return todos.filter((todo) => {
       const matchesSearch = todo.title.toLowerCase().includes(searchQuery.toLowerCase());
       if (filterStatus === 'COMPLETED') {
         return matchesSearch && todo.completed;
@@ -82,9 +114,8 @@ export const TodoDashboard = ({ theme, setTheme }) => {
     });
   }, [todos, searchQuery, filterStatus]);
 
-  // Calculate pending tasks count
   const pendingCount = useMemo(() => {
-    return todos.filter(todo => !todo.completed).length;
+    return todos.filter((todo) => !todo.completed).length;
   }, [todos]);
 
   return (
@@ -147,6 +178,13 @@ export const TodoDashboard = ({ theme, setTheme }) => {
           </button>
         </div>
       </header>
+
+      {/* Hiển thị lỗi hệ thống nếu có */}
+      {error && (
+        <div className="alert-message alert-danger" role="alert" style={{ marginBottom: '1.5rem' }}>
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Form thêm việc */}
       <section aria-label="Thêm việc cần làm">
@@ -214,7 +252,7 @@ export const TodoDashboard = ({ theme, setTheme }) => {
       <section aria-label="Danh sách công việc thực tế">
         <div className="todo-list">
           {filteredTodos.length > 0 ? (
-            filteredTodos.map(todo => (
+            filteredTodos.map((todo) => (
               <div key={todo.id} className="todo-card">
                 <div className="todo-left">
                   {/* Checkbox hình tròn lớn */}

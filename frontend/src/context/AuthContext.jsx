@@ -1,73 +1,76 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import api, { setAccessToken } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Lắng nghe sự thay đổi của Token từ API Client (để xử lý logout tự động nếu refresh hết hạn)
   useEffect(() => {
-    // Khôi phục phiên làm việc giả định từ memory (state). Không sử dụng localStorage cho token.
-    const storedUser = localStorage.getItem('todo_user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setToken('mock-jwt-access-token-xyz'); // Gán token giả lập vào bộ nhớ state
-      } catch (e) {
+    api.setOnTokenRefreshed((newToken) => {
+      if (!newToken) {
+        setUser(null);
         localStorage.removeItem('todo_user');
       }
+    });
+  }, []);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('todo_user');
+    if (storedUser) {
+      const restoreSession = async () => {
+        try {
+          // Gọi API refresh token ngầm khi khởi động để nạp access token vào RAM
+          const res = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            setAccessToken(data.accessToken);
+            setUser(JSON.parse(storedUser));
+          } else {
+            // Nếu refresh token đã hết hạn, xóa phiên cũ
+            localStorage.removeItem('todo_user');
+          }
+        } catch (e) {
+          console.error('Lỗi khi tự động phục hồi phiên làm việc:', e.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      restoreSession();
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = async (email, password) => {
-    // Giả lập độ trễ mạng (0ms khi chạy test)
-    await new Promise((resolve) => setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : 500));
-
-    if (!email || !password) {
-      throw new Error('Vui lòng nhập đầy đủ thông tin đăng nhập.');
-    }
-
-    // Tài khoản kiểm thử mặc định
-    if (email === 'user@example.com' && password === 'password123') {
-      const mockUser = { id: 1, email, name: 'Lê Anh Quang' };
-      setUser(mockUser);
-      setToken('mock-jwt-access-token-xyz');
-      localStorage.setItem('todo_user', JSON.stringify(mockUser));
-      return mockUser;
-    } else {
-      throw new Error('Email hoặc mật khẩu không chính xác.');
-    }
+    const data = await api.login(email, password);
+    setUser(data.user);
+    localStorage.setItem('todo_user', JSON.stringify(data.user));
+    return data.user;
   };
 
   const register = async (email, password, name) => {
-    await new Promise((resolve) => setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : 500));
-
-    if (!email || !password || !name) {
-      throw new Error('Vui lòng điền đầy đủ tất cả các trường.');
-    }
-
-    if (email === 'user@example.com') {
-      throw new Error('Email này đã được sử dụng để đăng ký tài khoản.');
-    }
-
-    const mockUser = { id: Date.now(), email, name };
-    setUser(mockUser);
-    setToken('mock-jwt-access-token-xyz');
-    localStorage.setItem('todo_user', JSON.stringify(mockUser));
-    return mockUser;
+    const data = await api.register(email, password, name);
+    setUser(data.user);
+    localStorage.setItem('todo_user', JSON.stringify(data.user));
+    return data.user;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await api.logout();
     setUser(null);
-    setToken(null);
     localStorage.removeItem('todo_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
