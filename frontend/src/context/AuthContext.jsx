@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import api, { setAccessToken } from '../services/api';
+import api, { setAccessToken, API_BASE_URL } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
       const restoreSession = async () => {
         try {
           // Gọi API refresh token ngầm khi khởi động để nạp access token vào RAM
-          const res = await fetch('/api/auth/refresh', {
+          const res = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
