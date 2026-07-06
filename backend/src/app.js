@@ -12,11 +12,11 @@ app.use(express.json({ limit: '1mb' }));
 // 2. Middleware đọc cookie
 app.use(cookieParser());
 
-// 3. Cấu hình CORS nghiêm ngặt hỗ trợ credentials
 const allowedOrigins = [
   'http://localhost:5173', // Cổng mặc định của Vite Frontend
-  'http://localhost:3000'
-];
+  'http://localhost:3000',
+  process.env.FRONTEND_URL
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {

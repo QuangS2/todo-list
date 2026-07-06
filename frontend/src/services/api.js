@@ -39,6 +39,8 @@ export const parseResponse = async (res) => {
 };
 
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 // Hàm gửi request dùng chung với cơ chế tự động Silent Refresh
 export const apiRequest = async (url, options = {}) => {
   const headers = {
@@ -58,13 +60,14 @@ export const apiRequest = async (url, options = {}) => {
     credentials: 'include',
   };
 
-  let response = await fetch(url, fetchOptions);
+  // Sử dụng API_BASE_URL để gọi tuyệt đối khi deploy
+  let response = await fetch(`${API_BASE_URL}${url}`, fetchOptions);
 
   // Nếu trả về lỗi 401 Unauthorized (Access Token hết hạn), thực hiện tự động Silent Refresh
   if (response.status === 401 && !url.includes('/api/auth/refresh') && !url.includes('/api/auth/login')) {
     try {
       console.log('[API Client] Access Token hết hạn, đang tự động gia hạn phiên...');
-      const refreshRes = await fetch('/api/auth/refresh', {
+      const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
