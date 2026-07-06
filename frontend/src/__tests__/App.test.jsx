@@ -55,7 +55,7 @@ vi.mock('../services/api', () => {
 
 // 2. Mock global.fetch để phục vụ Silent Refresh ngầm trong useEffect của AuthContext
 global.fetch = vi.fn().mockImplementation((url) => {
-  if (url === '/api/auth/refresh') {
+  if (url && url.includes('/api/auth/refresh')) {
     return Promise.resolve({
       ok: true,
       json: () => Promise.resolve({ accessToken: 'mock-access-token-xyz' })
