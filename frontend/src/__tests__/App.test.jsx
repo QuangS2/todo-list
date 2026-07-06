@@ -65,6 +65,7 @@ global.fetch = vi.fn().mockImplementation((url) => {
 });
 
 import App from '../App';
+import api from '../services/api';
 
 // Mock localStorage theo đúng quy chuẩn dự án
 const localStorageMock = (() => {
@@ -295,4 +296,21 @@ describe('Kiểm thử Luồng Đăng nhập, Đăng ký & Đăng xuất (Mốc 
     expect(loginHeading).toBeInTheDocument();
     expect(localStorage.getItem('todo_user')).toBeNull();
   });
+
+  it('Hiển thị thông báo lỗi thân thiện khi máy chủ gặp sự cố Gateway (502) không trả về JSON', async () => {
+    api.login.mockRejectedValueOnce(new Error('Lỗi Gateway (502). Máy chủ backend có thể chưa khởi động hoặc đang quá tải.'));
+
+    render(<App />);
+    const emailInput = screen.getByLabelText(/Email/i);
+    const passwordInput = screen.getByLabelText('Mật khẩu');
+    const submitBtn = screen.getByRole('button', { name: /Đăng nhập/i });
+
+    fireEvent.change(emailInput, { target: { value: 'user@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.click(submitBtn);
+
+    const errorMessage = await screen.findByText(/Lỗi Gateway \(502\)/i);
+    expect(errorMessage).toBeInTheDocument();
+  });
 });
+
