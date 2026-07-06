@@ -1,5 +1,7 @@
 # Ứng Dụng Quản Lý Công Việc - Todo List App
 
+🚀 **Link Deploy Trực tuyến:** [https://todo-list.quang-leanh-412.workers.dev/](https://todo-list.quang-leanh-412.workers.dev/)
+
 Ứng dụng Todo List cao cấp được thiết kế và xây dựng theo mô hình phân tách Frontend và Backend độc lập, tích hợp các tiêu chuẩn bảo mật JWT Auth Flow (Access/Refresh Token), phân quyền chống lỗ hổng IDOR, phòng vệ chống DoS, cùng hệ thống giao diện Curated Responsive hỗ trợ ba tông màu (Cream, Dark, Gray).
 
 ---
