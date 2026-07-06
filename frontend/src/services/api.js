@@ -9,6 +9,36 @@ export const setOnTokenRefreshed = (callback) => {
   onTokenRefreshed = callback;
 };
 
+// Hàm xử lý parse response và bắt lỗi an toàn (tránh lỗi crash "Unexpected end of JSON input")
+export const parseResponse = async (res) => {
+  const contentType = res.headers.get('content-type');
+  let data = null;
+
+  if (contentType && contentType.includes('application/json')) {
+    try {
+      data = await res.json();
+    } catch (e) {
+      // Bỏ qua nếu có lỗi parse cục bộ để chuyển qua xử lý text hoặc status
+    }
+  }
+
+  if (!res.ok) {
+    if (res.status === 502) {
+      throw new Error('Lỗi Gateway (502). Máy chủ backend có thể chưa khởi động hoặc đang quá tải.');
+    }
+    if (res.status === 503) {
+      throw new Error('Dịch vụ không khả dụng (503). Vui lòng thử lại sau.');
+    }
+    if (res.status === 404) {
+      throw new Error('Không tìm thấy API endpoint yêu cầu (404).');
+    }
+    throw new Error(data?.error || `Yêu cầu thất bại với mã trạng thái ${res.status}`);
+  }
+
+  return data || await res.text();
+};
+
+
 // Hàm gửi request dùng chung với cơ chế tự động Silent Refresh
 export const apiRequest = async (url, options = {}) => {
   const headers = {
@@ -76,11 +106,7 @@ export const login = async (email, password) => {
     body: JSON.stringify({ email, password }),
   });
   
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || 'Đăng nhập thất bại.');
-  }
-  
+  const data = await parseResponse(res);
   setAccessToken(data.accessToken);
   return data;
 };
@@ -92,11 +118,7 @@ export const register = async (email, password, name) => {
     body: JSON.stringify({ email, password, name }),
   });
   
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || 'Đăng ký thất bại.');
-  }
-  
+  const data = await parseResponse(res);
   setAccessToken(data.accessToken);
   return data;
 };
@@ -118,11 +140,7 @@ export const logout = async () => {
 // 4. LẤY DANH SÁCH TODOS
 export const getTodos = async () => {
   const res = await apiRequest('/api/todos');
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || 'Không thể lấy danh sách công việc.');
-  }
-  return data;
+  return await parseResponse(res);
 };
 
 // 5. TẠO TODO MỚI
@@ -131,11 +149,7 @@ export const createTodo = async (title) => {
     method: 'POST',
     body: JSON.stringify({ title }),
   });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || 'Không thể thêm công việc mới.');
-  }
-  return data;
+  return await parseResponse(res);
 };
 
 // 6. CẬP NHẬT TODO
@@ -144,11 +158,7 @@ export const updateTodo = async (id, title, completed) => {
     method: 'PUT',
     body: JSON.stringify({ title, completed }),
   });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || 'Không thể cập nhật công việc.');
-  }
-  return data;
+  return await parseResponse(res);
 };
 
 // 7. XÓA TODO
@@ -156,11 +166,7 @@ export const deleteTodo = async (id) => {
   const res = await apiRequest(`/api/todos/${id}`, {
     method: 'DELETE',
   });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || 'Không thể xóa công việc.');
-  }
-  return data;
+  return await parseResponse(res);
 };
 
 export default {
