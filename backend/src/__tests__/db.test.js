@@ -1,6 +1,6 @@
 import { vi, describe, it, expect } from 'vitest';
 
-// 1. Mock module 'pg' trước khi import db.js để tránh kết nối đến server thật
+// Mock module 'pg' trước khi import db.js để tránh kết nối đến server thật
 vi.mock('pg', () => {
   const mockQuery = vi.fn().mockImplementation((text, params) => {
     if (text.includes('SELECT * FROM users')) {

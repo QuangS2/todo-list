@@ -21,7 +21,7 @@ const generateRefreshToken = (user) => {
   );
 };
 
-// 1. ĐĂNG KÝ TÀI KHOẢN MỚI
+// ĐĂNG KÝ TÀI KHOẢN MỚI
 router.post('/register', async (req, res) => {
   const { email, password, name } = req.body;
 
@@ -75,7 +75,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// 2. ĐĂNG NHẬP
+// ĐĂNG NHẬP
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -125,7 +125,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 3. REFRESH TOKEN (Cấp lại Access Token mới)
+// REFRESH TOKEN (Cấp lại Access Token mới)
 router.post('/refresh', async (req, res) => {
   const refreshToken = req.cookies.refresh_token;
 
@@ -163,7 +163,7 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
-// 4. ĐĂNG XUẤT (Vô hiệu hóa phiên làm việc)
+// ĐĂNG XUẤT (Vô hiệu hóa phiên làm việc)
 router.post('/logout', async (req, res) => {
   const refreshToken = req.cookies.refresh_token;
 

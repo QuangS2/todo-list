@@ -7,7 +7,7 @@ const router = express.Router();
 // Bọc middleware auth để bảo vệ tất cả các endpoints bên dưới
 router.use(auth);
 
-// 1. LẤY DANH SÁCH TODOS CỦA USER ĐANG ĐĂNG NHẬP
+// LẤY DANH SÁCH TODOS CỦA USER ĐANG ĐĂNG NHẬP
 router.get('/', async (req, res) => {
   try {
     const todosRes = await db.query(
@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. THÊM TODO MỚI
+// THÊM TODO MỚI
 router.post('/', async (req, res) => {
   const { title } = req.body;
 
@@ -41,19 +41,19 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 3. CẬP NHẬT TODO
+// CẬP NHẬT TODO
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { title, completed } = req.body;
 
   try {
-    // 1. Kiểm tra sự tồn tại và quyền sở hữu để tránh lỗi lỗ hổng ID Harvesting (IDOR)
+    // Kiểm tra sự tồn tại và quyền sở hữu để tránh lỗi lỗ hổng ID Harvesting (IDOR)
     const checkRes = await db.query('SELECT id FROM todos WHERE id = $1 AND user_id = $2', [id, req.user.id]);
     if (checkRes.rowCount === 0) {
       return res.status(404).json({ error: 'Không tìm thấy công việc này hoặc bạn không có quyền cập nhật.' });
     }
 
-    // 2. Tiến hành cập nhật động dựa vào các trường được gửi lên
+    // Tiến hành cập nhật động dựa vào các trường được gửi lên
     const currentRes = await db.query('SELECT title, completed FROM todos WHERE id = $1', [id]);
     const currentTodo = currentRes.rows[0];
 
@@ -76,7 +76,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// 4. XÓA TODO
+// XÓA TODO
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 

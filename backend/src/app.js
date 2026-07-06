@@ -6,10 +6,10 @@ import todosRouter from './routes/todos.js';
 
 const app = express();
 
-// 1. Chống DoS bằng giới hạn payload body
+// Chống DoS bằng giới hạn payload body
 app.use(express.json({ limit: '1mb' }));
 
-// 2. Middleware đọc cookie
+// Middleware đọc cookie
 app.use(cookieParser());
 
 const allowedOrigins = [
@@ -29,11 +29,11 @@ app.use(cors({
   credentials: true
 }));
 
-// 4. API Routes
+// API Routes
 app.use('/api/auth', authRouter);
 app.use('/api/todos', todosRouter);
 
-// 5. Global Error Handling
+// Global Error Handling
 app.use((err, req, res, next) => {
   console.error('[Global Error Handler] Chi tiết lỗi:', err.stack || err.message);
   
